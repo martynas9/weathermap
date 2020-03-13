@@ -1,0 +1,12 @@
+$searcgbarbgcolor: #111;
+
+#searchbar {
+    height: 40px;
+    min-height: 20vh;
+    background-color: $searcgbarbgcolor;
+    text-align: center;
+
+    &_input {
+        width: 200px;
+    }
+}
