@@ -1,12 +1,54 @@
-$searcgbarbgcolor: #111;
+$topbarbgcolor: #1a1a1a;
+$searchbordercolor: #555;
+$weatherinfobgcolor: rgb(22, 54, 75);
 
-#searchbar {
-    height: 40px;
+#topbar {
+    height: 128px;
     min-height: 20vh;
-    background-color: $searcgbarbgcolor;
-    text-align: center;
+    background-color: $topbarbgcolor;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    box-sizing: border-box;
+    padding: 16px 32px;
+
+    h1 {
+        width: 100%;
+        text-align: center;
+        font-family: Verdana, Geneva, Tahoma, sans-serif;
+        font-size: 20px;
+    }
 
     &_input {
-        width: 200px;
+        width: 100%;
+        max-width: 1024px;
+        height: 32px;
+        font-size: 16px;
+        padding: 0 16px;
+        text-align: center;
+        border: 2px solid $searchbordercolor;
+        border-radius: 4px;
+    }
+}
+
+
+#map {
+    height: 256px;
+    min-height: 80vh;
+}
+
+
+#weatherinfo {
+    background-color: $weatherinfobgcolor;
+    box-sizing: border-box;
+    padding: 16px;
+    display: flex;
+    justify-content: center;
+    h2 {
+        width: 100%;
+        text-align: center;
+        font-size: 16px;
+        font-family: Verdana, Geneva, Tahoma, sans-serif;
     }
 }

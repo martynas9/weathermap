@@ -1,50 +1,91 @@
 import React from 'react';
 import './App.css';
-import {compose, withProps} from 'recompose';
-import {withScriptjs, withGoogleMap, GoogleMap, Marker} from 'react-google-maps';
 
-class SearchBar extends React.Component {
+class TopBar extends React.Component {
 
   render() {
     return (
-      <div id="searchbar">
-        <input id="searchbar_input"/>
+      <div id="topbar">
+        <h1>weathermap</h1>
+        <input id="topbar_input" placeholder="Enter location name..."/>
       </div>
     );
   }
 
 }
 
-const MapComponent = compose(
-  withProps({
-    googleMapURL: 'https://maps.googleapis.com/maps/api/js?v=3.exp&libraries=geometry,drawing,places',
-    loadingElement: <div style={{ height: `100%` }} />,
-    containerElement: <div style={{ height: `300px`, minHeight: `80vh` }} />,
-    mapElement: <div style={{ height: `100%` }} /> 
-  }),
-  withScriptjs,
-  withGoogleMap
-)((props) => (
-  <GoogleMap defaultZoom={8} defaultCenter={{ lat: -34.397, lng: 150.644 }}>
-     {props.isMarkerShown && <Marker position={{ lat: -34.397, lng: 150.644 }} />}
-  </GoogleMap>
-));
 
-class App extends React.Component {
-/*
+class TheMap extends React.Component {
+
   constructor(props) {
     super(props);
+    this.state = {
+      mapobject: false
+    };
   }
-*/
+
+  componentDidMount() {
+    this.loadGoogleMapsAPI();
+  }
+
+  loadGoogleMapsAPI = () => {
+    const index = document.getElementsByTagName('script')[0];
+    let script = document.createElement('script');
+    script.src = 'https://maps.googleapis.com/maps/api/js?key=AIzaSyAQI33ueJEn8G4W7NQEjR_R30R9gtAy69M&callback=initMap';
+    script.async = true;
+    script.defer = true;
+    index.parentNode.insertBefore(script, index);
+    window.initMap = this.initMap;
+  }
+
+  initMap = () => {
+    this.setState({mapobject: new window.google.maps.Map(document.getElementById('map'), {
+      center: {lat: -34.397, lng: 150.644},
+      zoom: 8
+    })});
+    /*
+    map.center = {lat: -34.397, lng: 150.644};
+    map.zoom = 8;*/
+
+  }
+
+  render() {
+    return (
+      <div id="map" />
+    );
+  }
+}
+
+class WeatherInfo extends React.Component {
+
+  render() {
+    return(
+      <div id="weatherinfo">
+        <h2>Weather in CITY_NAME</h2>
+      </div>
+    );
+  }
+
+}
+
+class App extends React.Component {
+
   render() {
     return(
       <div>
-        <SearchBar />
-        <MapComponent isMarkerShown />
+        <TopBar />
+        <TheMap />
+        <WeatherInfo />
       </div>
     );
   }
 
 }
 
+
 export default App;
+
+/*
+<script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAQI33ueJEn8G4W7NQEjR_R30R9gtAy69M&callback=initMap"
+    type="text/javascript"></script>
+*/

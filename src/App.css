@@ -1,11 +1,63 @@
-#searchbar {
-  height: 40px;
+#topbar {
+  height: 128px;
   min-height: 20vh;
-  background-color: #111;
-  text-align: center;
+  background-color: #1a1a1a;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -ms-flex-wrap: wrap;
+      flex-wrap: wrap;
+  -webkit-box-pack: center;
+      -ms-flex-pack: center;
+          justify-content: center;
+  -webkit-box-align: center;
+      -ms-flex-align: center;
+          align-items: center;
+  -webkit-box-sizing: border-box;
+          box-sizing: border-box;
+  padding: 16px 32px;
 }
 
-#searchbar_input {
-  width: 200px;
+#topbar h1 {
+  width: 100%;
+  text-align: center;
+  font-family: Verdana, Geneva, Tahoma, sans-serif;
+  font-size: 20px;
+}
+
+#topbar_input {
+  width: 100%;
+  max-width: 1024px;
+  height: 32px;
+  font-size: 16px;
+  padding: 0 16px;
+  text-align: center;
+  border: 2px solid #555;
+  border-radius: 4px;
+}
+
+#map {
+  height: 256px;
+  min-height: 80vh;
+}
+
+#weatherinfo {
+  background-color: #16364b;
+  -webkit-box-sizing: border-box;
+          box-sizing: border-box;
+  padding: 16px;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-pack: center;
+      -ms-flex-pack: center;
+          justify-content: center;
+}
+
+#weatherinfo h2 {
+  width: 100%;
+  text-align: center;
+  font-size: 16px;
+  font-family: Verdana, Geneva, Tahoma, sans-serif;
 }
 /*# sourceMappingURL=App.css.map */
