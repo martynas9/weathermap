@@ -7,7 +7,7 @@ class TopBar extends React.Component {
     return (
       <div id="topbar">
         <h1>weathermap</h1>
-        <input id="topbar_input" placeholder="Enter location name..."/>
+        <input id="topbar_input" type="text" placeholder="Enter location name..." autocomplete="on"/>
       </div>
     );
   }
@@ -20,7 +20,8 @@ class TheMap extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      mapobject: false
+      mapobj: false,
+      acobj: false,
     };
   }
 
@@ -31,7 +32,7 @@ class TheMap extends React.Component {
   loadGoogleMapsAPI = () => {
     const index = document.getElementsByTagName('script')[0];
     let script = document.createElement('script');
-    script.src = 'https://maps.googleapis.com/maps/api/js?key=AIzaSyAQI33ueJEn8G4W7NQEjR_R30R9gtAy69M&callback=initMap';
+    script.src = 'https://maps.googleapis.com/maps/api/js?key=AIzaSyAQI33ueJEn8G4W7NQEjR_R30R9gtAy69M&libraries=places&callback=initMap';
     script.async = true;
     script.defer = true;
     index.parentNode.insertBefore(script, index);
@@ -39,15 +40,75 @@ class TheMap extends React.Component {
   }
 
   initMap = () => {
-    this.setState({mapobject: new window.google.maps.Map(document.getElementById('map'), {
-      center: {lat: -34.397, lng: 150.644},
-      zoom: 8
-    })});
-    /*
-    map.center = {lat: -34.397, lng: 150.644};
-    map.zoom = 8;*/
+    this.setState({
+      mapobj: new window.google.maps.Map(
+        document.getElementById('map'),
+        {
+          center: {lat: 54.687, lng: 25.280},
+          zoom: 5
+        }
+      ),
+      acobj: new window.google.maps.places.Autocomplete(
+        document.getElementById('topbar_input'),
+        {
+          types: ['geocode']
+        }
+      )
+    });
+
+    navigator.geolocation.getCurrentPosition((pos) => {
+      this.state.mapobj.setCenter({lat: pos.coords.latitude, lng: pos.coords.longitude});
+    });
+
+
+    // Avoid paying for data that you don't need by restricting the set of
+    // place fields that are returned to just the address components.
+    //this.state.acobj.setFields(['address_component']);
+
+    // When the user selects an address from the drop-down, populate the
+    // address fields in the form.
+    //this.state.acobj.addListener('place_changed', this.fillInAddress);
 
   }
+  
+
+  fillInAddress = () => {
+    /*
+    // Get the place details from the autocomplete object.
+    var place = this.state.acobj.getPlace();
+  
+    for (var component in this.state.componentForm) {
+      document.getElementById(component).value = '';
+      document.getElementById(component).disabled = false;
+    }
+  
+    // Get each component of the address from the place details,
+    // and then fill-in the corresponding field on the form.
+    for (var i = 0; i < place.address_components.length; i++) {
+      var addressType = place.address_components[i].types[0];
+      if (this.state.componentForm[addressType]) {
+        var val = place.address_components[i][this.state.componentForm[addressType]];
+        document.getElementById(addressType).value = val;
+      }
+    }
+    */
+  }
+
+  geolocate = () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(function(position) {
+        var geolocation = {
+          lat: position.coords.latitude,
+          lng: position.coords.longitude
+        };
+        var circle = new window.google.maps.Circle(
+            {center: geolocation, radius: position.coords.accuracy});
+        this.state.acobj.setBounds(circle.getBounds());
+      });
+    }
+  }
+  
+  
 
   render() {
     return (
@@ -86,6 +147,6 @@ class App extends React.Component {
 export default App;
 
 /*
-<script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAQI33ueJEn8G4W7NQEjR_R30R9gtAy69M&callback=initMap"
+<script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAQI33ueJEn8G4W7NQEjR_R30R9gtAy69M&libraries=places&callback=initMap"
     type="text/javascript"></script>
 */
