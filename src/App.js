@@ -1,6 +1,15 @@
 import React from 'react';
 import './App.css';
 
+import 'ol/ol.css';
+import {Map, View} from 'ol';
+import Feature from 'ol/Feature';
+import {Tile as TileLayer, Vector as VectorLayer} from 'ol/layer';
+import {OSM, Vector as VectorSource} from 'ol/source';
+import Point from 'ol/geom/Point';
+import {fromLonLat} from 'ol/proj';
+import {Circle as CircleStyle, Fill, Stroke, Style} from 'ol/style';
+
 class TopBar extends React.Component {
 
   render() {
@@ -14,7 +23,7 @@ class TopBar extends React.Component {
 
 }
 
-
+/*
 class TheMap extends React.Component {
 
   constructor(props) {
@@ -63,37 +72,20 @@ class TheMap extends React.Component {
 
     // Avoid paying for data that you don't need by restricting the set of
     // place fields that are returned to just the address components.
-    //this.state.acobj.setFields(['address_component']);
+    this.state.acobj.setFields(['address_component']);
 
     // When the user selects an address from the drop-down, populate the
     // address fields in the form.
-    //this.state.acobj.addListener('place_changed', this.fillInAddress);
+    this.state.acobj.addListener('place_changed', this.showWeatherInfo);
 
   }
   
 
-  fillInAddress = () => {
-    /*
-    // Get the place details from the autocomplete object.
-    var place = this.state.acobj.getPlace();
-  
-    for (var component in this.state.componentForm) {
-      document.getElementById(component).value = '';
-      document.getElementById(component).disabled = false;
-    }
-  
-    // Get each component of the address from the place details,
-    // and then fill-in the corresponding field on the form.
-    for (var i = 0; i < place.address_components.length; i++) {
-      var addressType = place.address_components[i].types[0];
-      if (this.state.componentForm[addressType]) {
-        var val = place.address_components[i][this.state.componentForm[addressType]];
-        document.getElementById(addressType).value = val;
-      }
-    }
-    */
+  showWeatherInfo = () => {
+
   }
 
+  
   geolocate = () => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(function(position) {
@@ -116,6 +108,90 @@ class TheMap extends React.Component {
     );
   }
 }
+*/
+
+class OlMap extends React.Component {
+
+  constructor(props) {
+    super(props);
+    this.state = {
+      mapobj: false,
+      vectorlayerobj: false,
+    }
+  }
+
+  componentDidMount() {
+    this.initOlMap();
+  }
+
+  initOlMap = () => {
+    const viewobj = new View({
+      center: fromLonLat([15.2551, 54.5260]),
+      zoom: 4
+    });
+
+    const mapobj = new Map({
+      target: 'olmap',
+      layers: [
+        new TileLayer({
+          source: new OSM()
+        })
+      ],
+      view: viewobj
+    });
+
+    const positionFeature = new Feature();
+      positionFeature.setStyle(new Style({
+        image: new CircleStyle({
+          radius: 6,
+          fill: new Fill({
+            color: '#3399CC'
+          }),
+          stroke: new Stroke({
+            color: '#fff',
+            width: 2
+          })
+        })
+      }));
+
+    const vectorlayerobj = new VectorLayer({
+      map: mapobj,
+      source: new VectorSource({
+        features: [positionFeature]
+      })
+    });
+
+    navigator.geolocation.getCurrentPosition((pos) => {
+      viewobj.setCenter(fromLonLat([pos.coords.longitude, pos.coords.latitude]));
+
+
+      positionFeature.setGeometry(
+        new Point(fromLonLat([pos.coords.longitude, pos.coords.latitude]))
+      );
+
+    });
+
+
+    this.setState({
+      mapobj: mapobj,
+      vectorlayerobj: vectorlayerobj
+    });
+
+    mapobj.on('dblclick', 
+      (event) => {
+        console.log(event.coordinate);
+      }
+    );
+  };
+
+  render() {
+    return(
+      <div id="olmap" />
+    );
+  }
+
+}
+
 
 class WeatherInfo extends React.Component {
 
@@ -135,7 +211,7 @@ class App extends React.Component {
     return(
       <div>
         <TopBar />
-        <TheMap />
+        <OlMap />
         <WeatherInfo />
       </div>
     );
