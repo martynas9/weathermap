@@ -44,7 +44,8 @@ $weatherinfobgcolor: rgb(22, 54, 75);
     box-sizing: border-box;
     padding: 16px;
     display: flex;
-    justify-content: center;
+    flex-direction: column;
+    align-items: center;
     h2 {
         width: 100%;
         text-align: center;
