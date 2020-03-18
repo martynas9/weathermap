@@ -11,13 +11,64 @@ import Point from 'ol/geom/Point';
 import {fromLonLat, toLonLat} from 'ol/proj';
 import {Circle as CircleStyle, Fill, Stroke, Style} from 'ol/style';
 
+
+
 class TopBar extends React.Component {
+
+  constructor(props) {
+    super(props);
+    this.state = {
+      inputtext: '',
+      searchresult: {}
+    };
+    this.handleSearchChange = this.handleSearchChange.bind(this);
+    this.handleSuggestionClick = this.handleSuggestionClick.bind(this);
+  }
+
+  handleSearchChange(event) {
+    this.setState({inputtext: event.target.value});
+    //https://photon.komoot.de/api/?q=viln&limit=2
+    const div_suggestion = document.getElementById('topbar_input_suggestion');
+    if(event.target.value.length >= 3) {
+      fetch(`https://photon.komoot.de/api/?q=${event.target.value}&limit=1`)
+        .then(response => response.json())
+        .then(data => {
+          console.log(data);
+          if(data.features.length === 0) {
+            div_suggestion.style.visibility = 'hidden';
+            this.setState({searchresult: {}});
+          } else {
+            div_suggestion.style.visibility = 'visible';
+            const location_name = `${data.features[0].properties.name}, ${data.features[0].properties.country}`;
+            div_suggestion.innerHTML = location_name;
+            this.setState({searchresult: {
+              name: location_name,
+              coord_lon: data.features[0].geometry.coordinates[1],
+              coord_lat: data.features[0].geometry.coordinates[0]
+            }});
+          }
+        });
+    } else {
+      div_suggestion.style.visibility = 'hidden';
+      this.setState({searchresult: {}});
+      console.log(this.state.searchresult);
+    }
+  }
+
+  handleSuggestionClick(event) {
+    if(Object.keys(this.state.searchresult).length > 0) {
+      this.setState(state => ({inputtext: state.searchresult.name}));
+      document.getElementById('topbar_input_suggestion').style.visibility = 'hidden';
+      console.log('set coordinates in map, search for weather');
+    }
+  }
 
   render() {
     return (
       <div id="topbar">
         <h1>weathermap</h1>
-        <input id="topbar_input" type="text" placeholder="Enter location name..." />
+        <input id="topbar_input" type="text" maxLength="64" placeholder="Enter location name..." onChange={this.handleSearchChange} value={this.state.inputtext}/>
+        <div id="topbar_input_suggestion" onClick={this.handleSuggestionClick} />
       </div>
     );
   }
@@ -33,13 +84,14 @@ class OlMap extends React.Component {
       mapobj: false,
       vectorlayerobj: false,
     }
+    this.initOlMap = this.initOlMap.bind(this);
   }
 
   componentDidMount() {
     this.initOlMap();
   }
 
-  initOlMap = () => {
+  initOlMap() {
     const viewobj = new View({
       center: fromLonLat([15.2551, 54.5260]),
       zoom: 4,
@@ -103,7 +155,7 @@ class OlMap extends React.Component {
         fetch(callurl)
           .then((response) => (response.json()))
           .then((data) => {
-            console.log(data);
+            //console.log(data);
             this.props.f_changeWeatherInfo(data);
           })
           .catch(err => {
@@ -112,7 +164,7 @@ class OlMap extends React.Component {
 
       }
     );
-  };
+  }
 
   render() {
     return(
@@ -145,9 +197,20 @@ class WeatherInfo extends React.Component {
       return(
         <div id="weatherinfo">
           <h2>Weather in {this.props.weatherinfo.name ? `${this.props.weatherinfo.name}, ${getCountryName(this.props.weatherinfo.sys.country)}` : 'your selected location'}</h2>
-          <img src={`http://openweathermap.org/img/wn/${this.props.weatherinfo.weather[0].icon}@2x.png`} alt="weather icon"/>
-          <div>{Math.round(this.props.weatherinfo.main.temp)} &#8451;</div>
-          <div>{this.props.weatherinfo.weather[0].description}</div>
+          <img id="weatherinfo_icon" src={`http://openweathermap.org/img/wn/${this.props.weatherinfo.weather[0].icon}@2x.png`} alt="weather icon"/>
+          <div id="weatherinfo_temp">
+            {Math.round(this.props.weatherinfo.main.temp)}&#8451; <span id="weatherinfo_temp_feel">({Math.round(this.props.weatherinfo.main.feels_like)}&#8451;)</span>
+          </div>
+          <div id="weatherinfo_desc">{this.props.weatherinfo.weather[0].description}</div>
+          <div id="weatherinfo_wind">
+            <div id="weatherinfo_wind_name">Wind:</div>
+            <img id="weatherinfo_windicon" src={process.env.PUBLIC_URL + '/windicon.svg'} alt="wind icon" style={{transform: `rotate(${this.props.weatherinfo.wind.deg+135}deg)`}}/>
+            {this.props.weatherinfo.wind.speed} m/s
+          </div>
+          <div id="weatherinfo_cloudiness">
+            <div id="weatherinfo_cloudiness_name">Cloudiness:</div>
+            {this.props.weatherinfo.clouds.all} %
+            </div>
 
         </div>
       );
@@ -165,16 +228,17 @@ class App extends React.Component {
     this.state = {
       weatherinfo: false
     };
+    this.changeWeatherInfo = this.changeWeatherInfo.bind(this);
   }
 
-  changeWeatherInfo = (data) => {
+  changeWeatherInfo(data) {
     this.setState({weatherinfo: data});
-  };
+  }
 
   render() {
     return(
       <div>
-        <TopBar />
+        <TopBar f_changeWeatherInfo={this.changeWeatherInfo} />
         <OlMap f_changeWeatherInfo={this.changeWeatherInfo}/>
         <WeatherInfo weatherinfo={this.state.weatherinfo}/>
       </div>

@@ -1,10 +1,11 @@
-$topbarbgcolor: #1a1a1a;
+$topbarbgcolor: #222;
 $searchbordercolor: #555;
+$suggestionbordercolor: rgba(100, 100, 100, 0.5);
 $weatherinfobgcolor: rgb(22, 54, 75);
 
 #topbar {
-    height: 128px;
-    min-height: 20vh;
+    height: 140px;
+    min-height: 15vh;
     background-color: $topbarbgcolor;
     display: flex;
     flex-wrap: wrap;
@@ -20,22 +21,41 @@ $weatherinfobgcolor: rgb(22, 54, 75);
         font-size: 20px;
     }
 
-    &_input {
+    %topinputs {
         width: 100%;
         max-width: 1024px;
         height: 32px;
+        padding: 0 16px;
+    }
+
+    &_input {
+        @extend %topinputs;
         font-size: 16px;
         padding: 0 16px;
-        text-align: center;
+        /*text-align: center;*/
         border: 2px solid $searchbordercolor;
         border-radius: 4px;
+
+        &_suggestion{
+            @extend %topinputs;
+            border: 2px solid $suggestionbordercolor;
+            color: #444;
+            font-size: 0.8em;
+            line-height: 32px;
+            visibility: hidden;
+            background-color: rgba(240, 240, 240, 0.9);
+            &:hover {
+                background-color: rgba(240, 240, 240, 1);
+                cursor: pointer;
+            }
+        }
     }
 }
 
 #olmap {
     width: 100%;
     height: 256px;
-    min-height: 80vh;
+    min-height: 85vh;
 }
 
 
@@ -46,10 +66,48 @@ $weatherinfobgcolor: rgb(22, 54, 75);
     display: flex;
     flex-direction: column;
     align-items: center;
+    line-height: 1.5;
+    text-align: center;
     h2 {
         width: 100%;
         text-align: center;
         font-size: 16px;
         font-family: Verdana, Geneva, Tahoma, sans-serif;
+    }
+
+    &_temp {
+        &_feel {
+            color: #bbb;
+            font-size: 0.8em;
+        }
+    }
+
+    &_desc {
+        text-transform: capitalize;
+        margin-bottom: 16px;
+    }
+
+    %winames {
+        margin-top: 16px;
+        font-weight: bold;
+        font-size: 0.9em;
+    }
+
+    &_wind {
+        &_name {
+            @extend %winames;
+        }
+    }
+
+    &_cloudiness {
+        &_name {
+            @extend %winames;
+        }
+    }
+
+    &_windicon {
+        width: 24px;
+        height: 24px;
+        margin: 0 8px;
     }
 }

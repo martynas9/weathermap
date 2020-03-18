@@ -24,3 +24,4 @@ yarn-error.log*
 
 #other
 public/weathericons
+src/worldcities.json
