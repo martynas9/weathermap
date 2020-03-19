@@ -9,7 +9,7 @@ import {Tile as TileLayer, Vector as VectorLayer} from 'ol/layer';
 import {OSM, Vector as VectorSource} from 'ol/source';
 import Point from 'ol/geom/Point';
 import {fromLonLat, toLonLat} from 'ol/proj';
-import {Circle as CircleStyle, Fill, Stroke, Style} from 'ol/style';
+import {Circle as CircleStyle, Fill, Icon, Stroke, Style} from 'ol/style';
 
 
 
@@ -21,45 +21,80 @@ class TopBar extends React.Component {
       inputtext: '',
       searchresult: {}
     };
+    this.handleSearchFocus = this.handleSearchFocus.bind(this);
     this.handleSearchChange = this.handleSearchChange.bind(this);
     this.handleSuggestionClick = this.handleSuggestionClick.bind(this);
+    this.doSearch = this.doSearch.bind(this);
   }
 
-  handleSearchChange(event) {
-    this.setState({inputtext: event.target.value});
-    //https://photon.komoot.de/api/?q=viln&limit=2
-    const div_suggestion = document.getElementById('topbar_input_suggestion');
-    if(event.target.value.length >= 3) {
-      fetch(`https://photon.komoot.de/api/?q=${event.target.value}&limit=1`)
+  componentDidMount() {
+    document.addEventListener('keydown', (event) => {
+      if(document.getElementById('topbar_input') === document.activeElement) { // if focus is on search input
+        if(event.keyCode === 40) { // if press arrow_d
+          if(this.state.inputtext.length >= 3 && Object.keys(this.state.searchresult).length > 0) {
+            this.setState(state => ({inputtext: state.searchresult.name}));
+          }
+        } else if(event.keyCode === 13) { // press enter
+          if(this.state.inputtext.length >= 3 && this.state.inputtext === this.state.searchresult.name) {
+            document.activeElement.blur();
+            this.handleSuggestionClick();
+          }
+        }
+      }
+    });
+  }
+
+  handleSearchFocus(event) {
+    if(Object.keys(this.state.searchresult).length > 0) {
+      if(this.state.searchresult.name === this.state.inputtext) {
+        this.setState({inputtext: '', searchresult: {}});
+        document.getElementById('topbar_input_suggestion').style.visibility = 'hidden';
+      }
+    }
+  }
+
+
+  doSearch(value) {
+    if(value === this.state.inputtext) { // if value didnt change in 500ms
+      const div_suggestion = document.getElementById('topbar_input_suggestion');
+      fetch(`https://photon.komoot.de/api/?q=${value}&limit=1`)
         .then(response => response.json())
         .then(data => {
-          console.log(data);
           if(data.features.length === 0) {
             div_suggestion.style.visibility = 'hidden';
             this.setState({searchresult: {}});
           } else {
+            //console.log(data.features[0]);
             div_suggestion.style.visibility = 'visible';
             const location_name = `${data.features[0].properties.name}, ${data.features[0].properties.country}`;
             div_suggestion.innerHTML = location_name;
             this.setState({searchresult: {
               name: location_name,
-              coord_lon: data.features[0].geometry.coordinates[1],
-              coord_lat: data.features[0].geometry.coordinates[0]
+              lon: data.features[0].geometry.coordinates[0],
+              lat: data.features[0].geometry.coordinates[1]
             }});
           }
         });
-    } else {
-      div_suggestion.style.visibility = 'hidden';
-      this.setState({searchresult: {}});
-      console.log(this.state.searchresult);
     }
   }
 
-  handleSuggestionClick(event) {
+
+  handleSearchChange(event) {
+    this.setState({inputtext: event.target.value});
+    if(event.target.value.length >= 3) {
+      setTimeout(this.doSearch, 500, event.target.value);
+    } else {
+      document.getElementById('topbar_input_suggestion').style.visibility = 'hidden';
+      this.setState({searchresult: {}});
+    }
+  }
+
+  handleSuggestionClick() {
     if(Object.keys(this.state.searchresult).length > 0) {
       this.setState(state => ({inputtext: state.searchresult.name}));
       document.getElementById('topbar_input_suggestion').style.visibility = 'hidden';
-      console.log('set coordinates in map, search for weather');
+      this.props.f_requestOpenWeatherInfo(this.state.searchresult.lon, this.state.searchresult.lat); // requesting for weather
+      this.props.f_setMarkerPosition(this.state.searchresult.lon, this.state.searchresult.lat, true); // setting position on map
     }
   }
 
@@ -67,7 +102,7 @@ class TopBar extends React.Component {
     return (
       <div id="topbar">
         <h1>weathermap</h1>
-        <input id="topbar_input" type="text" maxLength="64" placeholder="Enter location name..." onChange={this.handleSearchChange} value={this.state.inputtext}/>
+        <input id="topbar_input" type="text" maxLength="64" placeholder="Enter location name..." onFocus={this.handleSearchFocus} onChange={this.handleSearchChange} value={this.state.inputtext}/>
         <div id="topbar_input_suggestion" onClick={this.handleSuggestionClick} />
       </div>
     );
@@ -82,13 +117,30 @@ class OlMap extends React.Component {
     super(props);
     this.state = {
       mapobj: false,
-      vectorlayerobj: false,
+      markerfeature: false,
+      vectorlayerobj: false
     }
     this.initOlMap = this.initOlMap.bind(this);
   }
 
   componentDidMount() {
     this.initOlMap();
+  }
+
+  componentDidUpdate(prevProps, prevState, snapshot) {
+    if(typeof(this.state.markerfeature) === 'object' && typeof(this.props.markerposition) === 'object') {
+      if((typeof(prevProps.markerposition) === 'object' && prevProps.markerposition.lon !== this.props.markerposition.lon) || prevProps.markerposition === false) { // update only if needed
+        this.state.markerfeature.setGeometry(
+          new Point(fromLonLat([this.props.markerposition.lon, this.props.markerposition.lat]))
+        );
+        if(this.props.markerposition.zoom === true && typeof(this.state.viewobj) === 'object') {
+          this.state.viewobj.setCenter(fromLonLat([this.props.markerposition.lon, this.props.markerposition.lat]));
+          if(this.state.viewobj.getZoom() < 8) {
+            this.state.viewobj.setZoom(8);
+          }
+        }
+      }
+    }
   }
 
   initOlMap() {
@@ -110,24 +162,35 @@ class OlMap extends React.Component {
 
     // create position circle img:
     const positionFeature = new Feature();
-      positionFeature.setStyle(new Style({
-        image: new CircleStyle({
-          radius: 8,
-          fill: new Fill({
-            color: '#3399CC'
-          }),
-          stroke: new Stroke({
-            color: '#fff',
-            width: 2
-          })
+    positionFeature.setStyle(new Style({
+      image: new CircleStyle({
+        radius: 8,
+        fill: new Fill({
+          color: '#2266AA'
+        }),
+        stroke: new Stroke({
+          color: '#fff',
+          width: 2
         })
-      }));
+      })
+    }));
+
+    // create map pointer img: https://www.iconfinder.com/icons/1814106/location_map_marker_icon
+    // {process.env.PUBLIC_URL + '/markericon.svg'}
+    const markerFeature = new Feature();
+    markerFeature.setStyle(new Style({
+      image: new Icon({
+        src: process.env.PUBLIC_URL + '/markericon.png',
+        anchor: [0.5, 0.9],
+        scale: 0.5
+      })
+    }));
 
     // create vector layer for images:
     const vectorlayerobj = new VectorLayer({
       map: mapobj,
       source: new VectorSource({
-        features: [positionFeature]
+        features: [positionFeature, markerFeature]
       })
     });
 
@@ -143,6 +206,8 @@ class OlMap extends React.Component {
 
     this.setState({
       mapobj: mapobj,
+      viewobj: viewobj,
+      markerfeature: markerFeature,
       vectorlayerobj: vectorlayerobj
     });
 
@@ -150,18 +215,8 @@ class OlMap extends React.Component {
     mapobj.on('singleclick', 
       (event) => {
         const lonlat = toLonLat(event.coordinate);
-        const owkey = '968464eae7efcc5f8be6d30c8cd46921';
-        const callurl = `https://api.openweathermap.org/data/2.5/weather?units=metric&lat=${lonlat[1]}&lon=${lonlat[0]}&appid=${owkey}`;
-        fetch(callurl)
-          .then((response) => (response.json()))
-          .then((data) => {
-            //console.log(data);
-            this.props.f_changeWeatherInfo(data);
-          })
-          .catch(err => {
-            console.log('Weather API call error: ' + err);
-          });
-
+        this.props.f_requestOpenWeatherInfo(lonlat[0], lonlat[1]);
+        this.props.f_setMarkerPosition(lonlat[0], lonlat[1], false);
       }
     );
   }
@@ -182,15 +237,8 @@ class WeatherInfo extends React.Component {
       document.getElementById('weatherinfo').scrollIntoView(true);
     }
   }
-/*
-  getWeatherIcon = (weathername) => {
-    // https://www.iconfinder.com/iconsets/weather-color-2
-    // process.env.PUBLIC_URL
-    const icons = {
-      Clear: ''
-    }
-  }
-*/
+
+
   render() {
 
     if(this.props.weatherinfo) {
@@ -221,26 +269,84 @@ class WeatherInfo extends React.Component {
 
 }
 
+
+
+class ScrollUp extends React.Component {
+
+  constructor(props) {
+    super(props);
+    this.handleScrollUpClick = this.handleScrollUpClick.bind(this);
+  }
+
+  componentDidMount() {
+    window.addEventListener('scroll', (event) => {
+      const topbar = document.getElementById('topbar');
+      if(topbar) {
+        if(window.scrollY > topbar.clientHeight) {
+          document.getElementById('scrollup').style.visibility = 'visible';
+        } else {
+          document.getElementById('scrollup').style.visibility = 'hidden';
+        }
+      }
+    });
+  }
+
+  handleScrollUpClick(event) {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  render() {
+    return(
+      <div id="scrollup_wrapper">
+        <div id="scrollup" onClick={this.handleScrollUpClick}>Back to top</div>
+      </div>
+    );
+  }
+}
+
+
 class App extends React.Component {
 
   constructor(props) {
     super(props);
     this.state = {
-      weatherinfo: false
+      weatherinfo: false,
+      markerposition: false,
     };
-    this.changeWeatherInfo = this.changeWeatherInfo.bind(this);
+    this.requestOpenWeatherInfo = this.requestOpenWeatherInfo.bind(this);
+    this.setMarkerPosition = this.setMarkerPosition.bind(this);
   }
 
-  changeWeatherInfo(data) {
-    this.setState({weatherinfo: data});
+  requestOpenWeatherInfo(lon, lat) {
+    const OWKEY = '968464eae7efcc5f8be6d30c8cd46921';
+    const callurl = `https://api.openweathermap.org/data/2.5/weather?units=metric&lat=${lat}&lon=${lon}&appid=${OWKEY}`;
+    fetch(callurl)
+      .then((response) => (response.json()))
+      .then((data) => {
+        //console.log(data);
+        this.setState({weatherinfo: data});
+      })
+      .catch(err => {
+        console.log('Weather API call error: ' + err);
+      });
+  }
+
+  setMarkerPosition(lon, lat, zoom = false) {
+    //console.log(lon, lat, zoom);
+    this.setState({markerposition: {
+      lon: lon,
+      lat: lat,
+      zoom: zoom
+    }});
   }
 
   render() {
     return(
       <div>
-        <TopBar f_changeWeatherInfo={this.changeWeatherInfo} />
-        <OlMap f_changeWeatherInfo={this.changeWeatherInfo}/>
+        <TopBar f_requestOpenWeatherInfo={this.requestOpenWeatherInfo} f_setMarkerPosition={this.setMarkerPosition} />
+        <OlMap f_requestOpenWeatherInfo={this.requestOpenWeatherInfo} f_setMarkerPosition={this.setMarkerPosition} markerposition={this.state.markerposition}/>
         <WeatherInfo weatherinfo={this.state.weatherinfo}/>
+        <ScrollUp />
       </div>
     );
   }

@@ -5,8 +5,10 @@
   display: -webkit-box;
   display: -ms-flexbox;
   display: flex;
-  -ms-flex-wrap: wrap;
-      flex-wrap: wrap;
+  -webkit-box-orient: vertical;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: column;
+          flex-direction: column;
   -webkit-box-pack: center;
       -ms-flex-pack: center;
           justify-content: center;
@@ -28,7 +30,7 @@
 #topbar #topbar_input, #topbar #topbar_input_suggestion {
   width: 100%;
   max-width: 1024px;
-  height: 32px;
+  min-height: 32px;
   padding: 0 16px;
 }
 
@@ -52,6 +54,42 @@
 #topbar_input_suggestion:hover {
   background-color: #f0f0f0;
   cursor: pointer;
+}
+
+#scrollup {
+  background-color: rgba(240, 240, 240, 0.8);
+  width: 128px;
+  height: 24px;
+  border-radius: 6px;
+  line-height: 24px;
+  text-align: center;
+  color: #222;
+  font-size: 0.8em;
+  -webkit-box-shadow: 0px 0px 5px 1px rgba(0, 0, 0, 0.4);
+  box-shadow: 0px 0px 5px 1px rgba(0, 0, 0, 0.4);
+  visibility: hidden;
+}
+
+#scrollup:hover {
+  background-color: rgba(245, 245, 245, 0.9);
+  cursor: pointer;
+}
+
+#scrollup_wrapper {
+  position: fixed;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  width: 100%;
+  -webkit-box-orient: vertical;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: column;
+          flex-direction: column;
+  -webkit-box-align: center;
+      -ms-flex-align: center;
+          align-items: center;
+  top: 8px;
+  padding: 8px;
 }
 
 #olmap {

@@ -8,7 +8,7 @@ $weatherinfobgcolor: rgb(22, 54, 75);
     min-height: 15vh;
     background-color: $topbarbgcolor;
     display: flex;
-    flex-wrap: wrap;
+    flex-direction: column;
     justify-content: center;
     align-items: center;
     box-sizing: border-box;
@@ -24,7 +24,7 @@ $weatherinfobgcolor: rgb(22, 54, 75);
     %topinputs {
         width: 100%;
         max-width: 1024px;
-        height: 32px;
+        min-height: 32px;
         padding: 0 16px;
     }
 
@@ -49,6 +49,34 @@ $weatherinfobgcolor: rgb(22, 54, 75);
                 cursor: pointer;
             }
         }
+    }
+}
+
+#scrollup {
+    background-color: rgba(240, 240, 240, 0.8);
+    width: 128px;
+    height: 24px;
+    border-radius: 6px;
+    line-height: 24px;
+    text-align: center;
+    color: #222;
+    font-size: 0.8em;
+    -webkit-box-shadow: 0px 0px 5px 1px rgba(0,0,0,0.4);
+    -moz-box-shadow: 0px 0px 5px 1px rgba(0,0,0,0.4);
+    box-shadow: 0px 0px 5px 1px rgba(0,0,0,0.4);
+    visibility: hidden;
+    &:hover {
+        background-color: rgba(245, 245, 245, 0.9);
+        cursor: pointer;
+    }
+    &_wrapper {
+        position: fixed;
+        display: flex;
+        width: 100%;
+        flex-direction: column;
+        align-items: center;
+        top: 8px;
+        padding: 8px;
     }
 }
 
