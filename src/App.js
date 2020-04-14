@@ -320,10 +320,11 @@ class App extends React.Component {
   requestOpenWeatherInfo(lon, lat) {
     const OWKEY = '968464eae7efcc5f8be6d30c8cd46921';
     const callurl = `https://api.openweathermap.org/data/2.5/weather?units=metric&lat=${lat}&lon=${lon}&appid=${OWKEY}`;
+    //const callurl = `https://api.openweathermap.org/data/2.5/onecall?units=metric&lat=${lat}&lon=${lon}&appid=${OWKEY}`;
     fetch(callurl)
       .then((response) => (response.json()))
       .then((data) => {
-        //console.log(data);
+        console.log(data);
         this.setState({weatherinfo: data});
       })
       .catch(err => {
@@ -355,8 +356,3 @@ class App extends React.Component {
 
 
 export default App;
-
-/*
-<script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAQI33ueJEn8G4W7NQEjR_R30R9gtAy69M&libraries=places&callback=initMap"
-    type="text/javascript"></script>
-*/
