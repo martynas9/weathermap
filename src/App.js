@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useEffect, useState} from 'react';
 import './App.css';
 import getCountryName from './countries.js';
 
@@ -11,6 +11,7 @@ import Point from 'ol/geom/Point';
 import {fromLonLat, toLonLat} from 'ol/proj';
 import {Circle as CircleStyle, Fill, Icon, Stroke, Style} from 'ol/style';
 
+import '@fortawesome/fontawesome-free/css/all.css';
 
 
 class TopBar extends React.Component {
@@ -230,44 +231,102 @@ class OlMap extends React.Component {
 }
 
 
-class WeatherInfo extends React.Component {
+const WeatherInfo = (props) => {
 
-  componentDidUpdate() {
-    if(this.props.weatherinfo) {
+  let [hourly, setHourly] = useState(false);
+
+  useEffect(() => {
+    if(props.weatherinfo) {
       document.getElementById('weatherinfo').scrollIntoView(true);
+      setHourly(false);
     }
-  }
+  }, [props.weatherinfo]);
 
+  const handleHourlyClick = () => {
+    if(props.weatherinfo) {
+      //setHourly(hourly ? false : true);
+      const OWKEY = '968464eae7efcc5f8be6d30c8cd46921';
+      const callurl = `https://api.openweathermap.org/data/2.5/forecast?units=metric&lat=${props.weatherinfo.coord.lat}&lon=${props.weatherinfo.coord.lon}&appid=${OWKEY}`;
+      fetch(callurl)
+        .then((response) => (response.json()))
+        .then((data) => {
+          console.log(data);
+          setHourly(data);
+        })
+        .catch(err => {
+          console.log('Weather API call error: ' + err);
+        });
+    }
+  };
 
-  render() {
-
-    if(this.props.weatherinfo) {
+  const HourlyForecast = () => {
+    if(hourly) {
       return(
-        <div id="weatherinfo">
-          <h2>Weather in {this.props.weatherinfo.name ? `${this.props.weatherinfo.name}, ${getCountryName(this.props.weatherinfo.sys.country)}` : 'your selected location'}</h2>
-          <img id="weatherinfo_icon" src={`http://openweathermap.org/img/wn/${this.props.weatherinfo.weather[0].icon}@2x.png`} alt="weather icon"/>
-          <div id="weatherinfo_temp">
-            {Math.round(this.props.weatherinfo.main.temp)}&#8451; <span id="weatherinfo_temp_feel">({Math.round(this.props.weatherinfo.main.feels_like)}&#8451;)</span>
-          </div>
-          <div id="weatherinfo_desc">{this.props.weatherinfo.weather[0].description}</div>
-          <div id="weatherinfo_wind">
-            <div id="weatherinfo_wind_name">Wind:</div>
-            <img id="weatherinfo_windicon" src={process.env.PUBLIC_URL + '/windicon.svg'} alt="wind icon" style={{transform: `rotate(${this.props.weatherinfo.wind.deg+135}deg)`}}/>
-            {this.props.weatherinfo.wind.speed} m/s
-          </div>
-          <div id="weatherinfo_cloudiness">
-            <div id="weatherinfo_cloudiness_name">Cloudiness:</div>
-            {this.props.weatherinfo.clouds.all} %
+        <div id="weatherinfo_hourly">
+          {hourly.list.map((value, index, array) => {
+            let thedate = new Date(parseInt(value.dt)*1000);
+            let thelastdate = index > 0 ? new Date(parseInt(array[index-1].dt)*1000) : thedate;
+            const weekdays = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+            const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+            return (
+            <div key={'forecast'+index} >
+              {index === 0 || thedate.getDay() !== thelastdate.getDay() ? 
+                <div className="day" >{weekdays[thedate.getDay()] + ', ' + months[thedate.getMonth()] + ' ' + thedate.getDate()}</div>
+               : ''}
+              <div className="item" >
+                <div className="time">{thedate.getHours() + ':00'}</div>
+                <img className="icon" src={`http://openweathermap.org/img/wn/${value.weather[0].icon}@2x.png`} alt="weather icon"/>
+                <div className="temp">{Math.round(value.main.temp)} &#8451;<br/><span className="feel">{Math.round(value.main.feels_like)} &#8451;</span></div>
+                <div className="desc">{value.weather[0].description}</div>
+                <div className="clouds"><i className="fas fa-cloud" /> {value.clouds.all} %
+                </div>
+                <div className="wind">
+                  <img className="wind_icon" src={process.env.PUBLIC_URL + '/windicon.svg'} alt="wind icon" style={{transform: `rotate(${value.wind.deg+135}deg)`}}/>
+                  {value.wind.speed} m/s
+                </div>
+              </div>
             </div>
-
+            );
+          })}
         </div>
       );
     } else {
       return('');
     }
+  };
+
+
+  if(props.weatherinfo) {
+    return(
+      <div id="weatherinfo">
+        <h2>Weather in {props.weatherinfo.name ? `${props.weatherinfo.name}, ${getCountryName(props.weatherinfo.sys.country)}` : 'your selected location'}</h2>
+        <img id="weatherinfo_icon" src={`http://openweathermap.org/img/wn/${props.weatherinfo.weather[0].icon}@2x.png`} alt="weather icon"/>
+        <div id="weatherinfo_temp">
+          {Math.round(props.weatherinfo.main.temp)}&#8451; <span id="weatherinfo_temp_feel">({Math.round(props.weatherinfo.main.feels_like)}&#8451;)</span>
+        </div>
+        <div id="weatherinfo_desc">{props.weatherinfo.weather[0].description}</div>
+        <div id="weatherinfo_wind">
+          <div id="weatherinfo_wind_name">Wind:</div>
+          <img id="weatherinfo_windicon" src={process.env.PUBLIC_URL + '/windicon.svg'} alt="wind icon" style={{transform: `rotate(${props.weatherinfo.wind.deg+135}deg)`}}/>
+          {props.weatherinfo.wind.speed} m/s
+        </div>
+        <div id="weatherinfo_cloudiness">
+          <div id="weatherinfo_cloudiness_name">Cloudiness:</div>
+          {props.weatherinfo.clouds.all} %
+        </div>
+        <div id="weatherinfo_togglehourly" onClick={handleHourlyClick} className={hourly ? 'nodisplay' : ''}>
+          Show hourly forecast
+        </div>
+        <HourlyForecast />
+
+      </div>
+    );
+  } else {
+    return('');
   }
 
-}
+
+};
 
 
 
@@ -320,11 +379,10 @@ class App extends React.Component {
   requestOpenWeatherInfo(lon, lat) {
     const OWKEY = '968464eae7efcc5f8be6d30c8cd46921';
     const callurl = `https://api.openweathermap.org/data/2.5/weather?units=metric&lat=${lat}&lon=${lon}&appid=${OWKEY}`;
-    //const callurl = `https://api.openweathermap.org/data/2.5/onecall?units=metric&lat=${lat}&lon=${lon}&appid=${OWKEY}`;
     fetch(callurl)
       .then((response) => (response.json()))
       .then((data) => {
-        console.log(data);
+      //  console.log(data);
         this.setState({weatherinfo: data});
       })
       .catch(err => {

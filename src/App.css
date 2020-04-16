@@ -145,4 +145,120 @@
   height: 24px;
   margin: 0 8px;
 }
+
+#weatherinfo_togglehourly {
+  background-color: rgba(255, 255, 255, 0.2);
+  padding: 8px;
+  margin-top: 32px;
+  border-radius: 4px;
+  -webkit-user-select: none;
+     -moz-user-select: none;
+      -ms-user-select: none;
+          user-select: none;
+}
+
+#weatherinfo_togglehourly:hover {
+  cursor: pointer;
+}
+
+#weatherinfo_hourly {
+  margin-top: 32px;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-orient: vertical;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: column;
+          flex-direction: column;
+  /*min-width: 400px;*/
+}
+
+#weatherinfo_hourly .day {
+  text-align: left;
+  padding: 8px;
+  margin-top: 4px;
+  background-color: rgba(25, 25, 25, 0.4);
+}
+
+#weatherinfo_hourly .item {
+  margin-top: 1px;
+  background-color: rgba(150, 200, 220, 0.4);
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+}
+
+#weatherinfo_hourly .item .time {
+  -ms-flex-item-align: center;
+      -ms-grid-row-align: center;
+      align-self: center;
+  width: 64px;
+}
+
+#weatherinfo_hourly .item .icon {
+  width: 48px;
+}
+
+#weatherinfo_hourly .item .temp {
+  font-size: 0.9em;
+  width: 64px;
+  line-height: 16px;
+  -ms-flex-item-align: center;
+      -ms-grid-row-align: center;
+      align-self: center;
+}
+
+#weatherinfo_hourly .item .temp .feel {
+  color: #bbb;
+  font-size: 0.8em;
+}
+
+#weatherinfo_hourly .item .desc {
+  font-family: Arial;
+  -ms-flex-item-align: center;
+      -ms-grid-row-align: center;
+      align-self: center;
+  text-align: left;
+  text-transform: capitalize;
+  min-width: 200px;
+  margin: 0 4px;
+}
+
+#weatherinfo_hourly .item .clouds {
+  font-size: 0.9em;
+  -ms-flex-item-align: center;
+      -ms-grid-row-align: center;
+      align-self: center;
+  width: 86px;
+  padding: 0 4px;
+  -webkit-box-sizing: border-box;
+          box-sizing: border-box;
+  text-align: left;
+}
+
+#weatherinfo_hourly .item .clouds i {
+  margin-left: 4px;
+}
+
+#weatherinfo_hourly .item .wind {
+  font-size: 0.9em;
+  -ms-flex-item-align: center;
+      -ms-grid-row-align: center;
+      align-self: center;
+  /*background-color: rgba(50, 50, 50, 0.2);*/
+  width: 128px;
+  padding: 0 4px;
+  -webkit-box-sizing: border-box;
+          box-sizing: border-box;
+  text-align: left;
+}
+
+#weatherinfo_hourly .item .wind_icon {
+  margin: 0 8px;
+  width: 0.9em;
+}
+
+.nodisplay {
+  display: none;
+}
 /*# sourceMappingURL=App.css.map */

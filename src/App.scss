@@ -127,15 +127,111 @@ $weatherinfobgcolor: rgb(22, 54, 75);
         }
     }
 
+    &_windicon {
+        width: 24px;
+        height: 24px;
+        margin: 0 8px;
+    }
+
     &_cloudiness {
         &_name {
             @extend %winames;
         }
     }
 
-    &_windicon {
-        width: 24px;
-        height: 24px;
-        margin: 0 8px;
+    &_togglehourly {
+        background-color: rgba(255, 255, 255, 0.2);
+        padding: 8px;
+        margin-top: 32px;
+        border-radius: 4px;
+        user-select: none;
+
+        &:hover {
+            cursor: pointer;
+        }
     }
+
+    &_hourly {
+        margin-top: 32px;
+        display: flex;
+        flex-direction: column;
+        /*min-width: 400px;*/
+
+        .day {
+            text-align: left;
+            padding: 8px;
+            margin-top: 4px;
+            background-color: rgba(25, 25, 25, 0.4);
+        }
+
+        .item {
+            margin-top: 1px;
+            background-color: rgba(150, 200, 220, 0.4);
+            display: flex;
+
+            .time {
+                align-self: center;
+                width: 64px;
+            }
+
+
+            .icon {
+                width: 48px;
+            }
+
+            .temp {
+                font-size: 0.9em;
+                width: 64px;
+                line-height: 16px;
+                align-self: center;
+                .feel {
+                    color: #bbb;
+                    font-size: 0.8em;
+                }
+
+            }
+
+            .desc {
+                font-family: Arial;
+                align-self: center;
+                text-align: left;
+                text-transform: capitalize;
+                min-width: 200px;
+                margin: 0 4px;
+            }
+
+            .clouds {
+                font-size: 0.9em;
+                align-self: center;
+                width: 86px;
+                padding: 0 4px;
+                box-sizing: border-box;
+                text-align: left;
+
+                i {
+                    margin-left: 4px;
+                }
+            }
+
+            .wind {
+                font-size: 0.9em;
+                align-self: center;
+                /*background-color: rgba(50, 50, 50, 0.2);*/
+                width: 128px;
+                padding: 0 4px;
+                box-sizing: border-box;
+                text-align: left;
+
+                &_icon {
+                    margin: 0 8px;
+                    width: 0.9em;
+                }
+            }
+        }
+    }
+
+}
+
+.nodisplay {
+    display: none;
 }
