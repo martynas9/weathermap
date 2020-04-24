@@ -1,3 +1,5 @@
+@import url("https://fonts.googleapis.com/css?family=Oswald&display=swap");
+@import url("https://fonts.googleapis.com/css?family=Rajdhani&display=swap");
 #topbar {
   height: 140px;
   min-height: 15vh;
@@ -18,12 +20,19 @@
   -webkit-box-sizing: border-box;
           box-sizing: border-box;
   padding: 16px 32px;
+  /*
+    &_logo {
+        width: 64px;
+    }
+    */
 }
 
 #topbar h1 {
   width: 100%;
   text-align: center;
-  font-family: Verdana, Geneva, Tahoma, sans-serif;
+  /*font-family: Verdana, Geneva, Tahoma, sans-serif;*/
+  font-family: 'Rajdhani', sans-serif;
+  color: #55bbcc;
   font-size: 20px;
 }
 
@@ -32,6 +41,7 @@
   max-width: 1024px;
   min-height: 32px;
   padding: 0 16px;
+  border-radius: 6px;
 }
 
 #topbar_input {
@@ -39,7 +49,6 @@
   padding: 0 16px;
   /*text-align: center;*/
   border: 2px solid #555;
-  border-radius: 4px;
 }
 
 #topbar_input_suggestion {
@@ -57,6 +66,7 @@
 }
 
 #scrollup {
+  pointer-events: auto;
   background-color: rgba(240, 240, 240, 0.8);
   width: 128px;
   height: 24px;
@@ -76,6 +86,7 @@
 }
 
 #scrollup_wrapper {
+  pointer-events: none;
   position: fixed;
   display: -webkit-box;
   display: -ms-flexbox;
@@ -89,7 +100,7 @@
       -ms-flex-align: center;
           align-items: center;
   top: 8px;
-  padding: 8px;
+  padding-top: 8px;
 }
 
 #olmap {
@@ -170,17 +181,44 @@
   -webkit-box-direction: normal;
       -ms-flex-direction: column;
           flex-direction: column;
-  /*min-width: 400px;*/
+  /* toggle list / graph */
 }
 
-#weatherinfo_hourly .day {
+#weatherinfo_hourly_view {
+  width: 96px;
+  padding: 2px;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  background-color: rgba(30, 30, 30, 0.8);
+  border-radius: 4px;
+  overflow: hidden;
+  margin: 8px 0;
+}
+
+#weatherinfo_hourly_view_list, #weatherinfo_hourly_view_graph {
+  width: 48px;
+  height: 32px;
+  line-height: 32px;
+}
+
+#weatherinfo_hourly_view_list:hover, #weatherinfo_hourly_view_graph:hover {
+  cursor: pointer;
+}
+
+#weatherinfo_hourly_view .selected {
+  background-color: rgba(50, 100, 140, 0.5);
+  border-radius: 2px;
+}
+
+#weatherinfo_hourly_list .day {
   text-align: left;
   padding: 8px;
   margin-top: 4px;
   background-color: rgba(25, 25, 25, 0.4);
 }
 
-#weatherinfo_hourly .item {
+#weatherinfo_hourly_list .item {
   margin-top: 1px;
   background-color: rgba(150, 200, 220, 0.4);
   display: -webkit-box;
@@ -188,18 +226,18 @@
   display: flex;
 }
 
-#weatherinfo_hourly .item .time {
+#weatherinfo_hourly_list .item .time {
   -ms-flex-item-align: center;
       -ms-grid-row-align: center;
       align-self: center;
   width: 64px;
 }
 
-#weatherinfo_hourly .item .icon {
+#weatherinfo_hourly_list .item .icon {
   width: 48px;
 }
 
-#weatherinfo_hourly .item .temp {
+#weatherinfo_hourly_list .item .temp {
   font-size: 0.9em;
   width: 64px;
   line-height: 16px;
@@ -208,12 +246,12 @@
       align-self: center;
 }
 
-#weatherinfo_hourly .item .temp .feel {
+#weatherinfo_hourly_list .item .temp .feel {
   color: #bbb;
   font-size: 0.8em;
 }
 
-#weatherinfo_hourly .item .desc {
+#weatherinfo_hourly_list .item .desc {
   font-family: Arial;
   -ms-flex-item-align: center;
       -ms-grid-row-align: center;
@@ -224,7 +262,13 @@
   margin: 0 4px;
 }
 
-#weatherinfo_hourly .item .clouds {
+@media (max-width: 640px) {
+  #weatherinfo_hourly_list .item .desc {
+    display: none;
+  }
+}
+
+#weatherinfo_hourly_list .item .clouds {
   font-size: 0.9em;
   -ms-flex-item-align: center;
       -ms-grid-row-align: center;
@@ -236,26 +280,78 @@
   text-align: left;
 }
 
-#weatherinfo_hourly .item .clouds i {
+#weatherinfo_hourly_list .item .clouds i {
   margin-left: 4px;
 }
 
-#weatherinfo_hourly .item .wind {
+#weatherinfo_hourly_list .item .wind {
   font-size: 0.9em;
   -ms-flex-item-align: center;
       -ms-grid-row-align: center;
       align-self: center;
   /*background-color: rgba(50, 50, 50, 0.2);*/
-  width: 128px;
+  width: 120px;
   padding: 0 4px;
   -webkit-box-sizing: border-box;
           box-sizing: border-box;
   text-align: left;
 }
 
-#weatherinfo_hourly .item .wind_icon {
+#weatherinfo_hourly_list .item .wind_icon {
   margin: 0 8px;
   width: 0.9em;
+}
+
+#weatherinfo_hourly_graph {
+  background-color: rgba(120, 180, 200, 0.3);
+  max-width: 96vw;
+  overflow: auto;
+  padding-top: 32px;
+  margin-bottom: 32px;
+}
+
+#weatherinfo_hourly_graph::-webkit-scrollbar {
+  width: 6px;
+}
+
+#weatherinfo_hourly_graph::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.4);
+}
+
+#weatherinfo_hourly_graph::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.6);
+}
+
+#weatherinfo_hourly_graph::-webkit-scrollbar-thumb:hover {
+  background: rgba(20, 20, 20, 0.6);
+}
+
+#weatherinfo_hourly_graph_tooltip {
+  pointer-events: none;
+  font-family: 'Oswald', sans-serif;
+  font-size: 0.9em;
+  position: absolute;
+  visibility: hidden;
+  padding: 4px;
+  min-width: 100px;
+  background-color: rgba(20, 50, 70, 0.8);
+  color: #ddd;
+}
+
+#weatherinfo_hourly_graph_tooltip .feel {
+  font-size: 0.8em;
+  color: #ccc;
+}
+
+#weatherinfo_hourly_graph_svg_label {
+  fill: #ccc;
+  font-family: 'Arial', sans-serif;
+  font-weight: bold;
+}
+
+#weatherinfo_hourly_graph_svg .templine {
+  stroke: rgba(240, 240, 240, 0.3);
+  stroke-width: 2;
 }
 
 .nodisplay {

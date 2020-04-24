@@ -1,7 +1,14 @@
+@import url('https://fonts.googleapis.com/css?family=Oswald&display=swap');
+@import url('https://fonts.googleapis.com/css?family=Rajdhani&display=swap');
+
 $topbarbgcolor: #222;
 $searchbordercolor: #555;
 $suggestionbordercolor: rgba(100, 100, 100, 0.5);
 $weatherinfobgcolor: rgb(22, 54, 75);
+
+$graphbgcolor: rgba(120, 180, 200, 0.3);
+
+
 
 #topbar {
     height: 140px;
@@ -14,10 +21,18 @@ $weatherinfobgcolor: rgb(22, 54, 75);
     box-sizing: border-box;
     padding: 16px 32px;
 
+    /*
+    &_logo {
+        width: 64px;
+    }
+    */
+
     h1 {
         width: 100%;
         text-align: center;
-        font-family: Verdana, Geneva, Tahoma, sans-serif;
+        /*font-family: Verdana, Geneva, Tahoma, sans-serif;*/
+        font-family: 'Rajdhani', sans-serif;
+        color: #55bbcc;
         font-size: 20px;
     }
 
@@ -26,6 +41,7 @@ $weatherinfobgcolor: rgb(22, 54, 75);
         max-width: 1024px;
         min-height: 32px;
         padding: 0 16px;
+        border-radius: 6px;
     }
 
     &_input {
@@ -34,7 +50,6 @@ $weatherinfobgcolor: rgb(22, 54, 75);
         padding: 0 16px;
         /*text-align: center;*/
         border: 2px solid $searchbordercolor;
-        border-radius: 4px;
 
         &_suggestion{
             @extend %topinputs;
@@ -53,6 +68,7 @@ $weatherinfobgcolor: rgb(22, 54, 75);
 }
 
 #scrollup {
+    pointer-events:auto;
     background-color: rgba(240, 240, 240, 0.8);
     width: 128px;
     height: 24px;
@@ -70,13 +86,14 @@ $weatherinfobgcolor: rgb(22, 54, 75);
         cursor: pointer;
     }
     &_wrapper {
+        pointer-events: none;
         position: fixed;
         display: flex;
         width: 100%;
         flex-direction: column;
         align-items: center;
         top: 8px;
-        padding: 8px;
+        padding-top: 8px;
     }
 }
 
@@ -155,78 +172,162 @@ $weatherinfobgcolor: rgb(22, 54, 75);
         margin-top: 32px;
         display: flex;
         flex-direction: column;
-        /*min-width: 400px;*/
 
-        .day {
-            text-align: left;
-            padding: 8px;
-            margin-top: 4px;
-            background-color: rgba(25, 25, 25, 0.4);
+        /* toggle list / graph */
+        &_view {
+            width: 96px;
+            padding: 2px;
+            display: flex;
+            background-color: rgba(30, 30, 30, 0.8);
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 8px 0;
+            
+            &_list, &_graph {
+                width: 48px;
+                height: 32px;
+                line-height: 32px;
+                &:hover {
+                    cursor: pointer;
+                }
+            }
+
+            .selected {
+                background-color: rgba(50, 100, 140, 0.5);
+                border-radius: 2px;
+            }
         }
 
-        .item {
-            margin-top: 1px;
-            background-color: rgba(150, 200, 220, 0.4);
-            display: flex;
-
-            .time {
-                align-self: center;
-                width: 64px;
+        &_list {
+            .day {
+                text-align: left;
+                padding: 8px;
+                margin-top: 4px;
+                background-color: rgba(25, 25, 25, 0.4);
             }
 
+            .item {
+                margin-top: 1px;
+                background-color: rgba(150, 200, 220, 0.4);
+                display: flex;
 
-            .icon {
-                width: 48px;
+                .time {
+                    align-self: center;
+                    width: 64px;
+                }
+
+
+                .icon {
+                    width: 48px;
+                }
+
+                .temp {
+                    font-size: 0.9em;
+                    width: 64px;
+                    line-height: 16px;
+                    align-self: center;
+                    .feel {
+                        color: #bbb;
+                        font-size: 0.8em;
+                    }
+
+                }
+
+                .desc {
+                    font-family: Arial;
+                    align-self: center;
+                    text-align: left;
+                    text-transform: capitalize;
+                    min-width: 200px;
+                    margin: 0 4px;
+                    @media (max-width: 640px) {
+                        display: none;
+                    }
+                }
+
+                .clouds {
+                    font-size: 0.9em;
+                    align-self: center;
+                    width: 86px;
+                    padding: 0 4px;
+                    box-sizing: border-box;
+                    text-align: left;
+
+                    i {
+                        margin-left: 4px;
+                    }
+                }
+
+                .wind {
+                    font-size: 0.9em;
+                    align-self: center;
+                    /*background-color: rgba(50, 50, 50, 0.2);*/
+                    width: 120px;
+                    padding: 0 4px;
+                    box-sizing: border-box;
+                    text-align: left;
+
+                    &_icon {
+                        margin: 0 8px;
+                        width: 0.9em;
+                    }
+                }
+            }
+        }
+
+        &_graph {
+            background-color: $graphbgcolor;
+            max-width: 96vw;
+            overflow: auto;
+            padding-top: 32px;
+            margin-bottom: 32px;
+
+            &::-webkit-scrollbar {
+                width: 6px;
             }
 
-            .temp {
+            &::-webkit-scrollbar-track {
+                background: rgba(255, 255, 255, 0.4);
+            }
+
+            &::-webkit-scrollbar-thumb {
+                background: rgba(0, 0, 0, 0.6);
+            }
+              
+            &::-webkit-scrollbar-thumb:hover {
+                background: rgba(20, 20, 20, 0.6);
+            }
+
+            &_tooltip {
+                pointer-events:none;
+                font-family: 'Oswald', sans-serif;
                 font-size: 0.9em;
-                width: 64px;
-                line-height: 16px;
-                align-self: center;
+                position: absolute;
+                visibility: hidden;
+                padding: 4px;
+                min-width: 100px;
+                background-color: rgba(20, 50, 70, 0.8);
+                color: #ddd;
+
                 .feel {
-                    color: #bbb;
                     font-size: 0.8em;
-                }
-
-            }
-
-            .desc {
-                font-family: Arial;
-                align-self: center;
-                text-align: left;
-                text-transform: capitalize;
-                min-width: 200px;
-                margin: 0 4px;
-            }
-
-            .clouds {
-                font-size: 0.9em;
-                align-self: center;
-                width: 86px;
-                padding: 0 4px;
-                box-sizing: border-box;
-                text-align: left;
-
-                i {
-                    margin-left: 4px;
+                    color: #ccc;
                 }
             }
 
-            .wind {
-                font-size: 0.9em;
-                align-self: center;
-                /*background-color: rgba(50, 50, 50, 0.2);*/
-                width: 128px;
-                padding: 0 4px;
-                box-sizing: border-box;
-                text-align: left;
+            &_svg {
+                &_label {
+                    fill: #ccc;
+                    font-family: 'Arial', sans-serif;
+                    font-weight: bold;
+                }
 
-                &_icon {
-                    margin: 0 8px;
-                    width: 0.9em;
+                .templine {
+                    stroke:rgba(240, 240, 240, 0.3);
+                    stroke-width: 2;
                 }
             }
+
         }
     }
 

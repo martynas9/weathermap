@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import './App.css';
 import getCountryName from './countries.js';
 
@@ -12,6 +12,10 @@ import {fromLonLat, toLonLat} from 'ol/proj';
 import {Circle as CircleStyle, Fill, Icon, Stroke, Style} from 'ol/style';
 
 import '@fortawesome/fontawesome-free/css/all.css';
+
+import * as d3 from 'd3';
+
+const weekdays = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
 
 class TopBar extends React.Component {
@@ -231,9 +235,113 @@ class OlMap extends React.Component {
 }
 
 
+const HourlyForecastGraph = (props) => {
+  const tooltipEl = useRef(null);
+  const svgEl = useRef(null);
+
+  const w = 1600,
+        h = 480,
+        padding = 32;
+
+  useEffect(
+    () => {
+      if(props.data && svgEl.current) {
+
+        const tooltip = d3.select(tooltipEl.current);
+
+        const svg = d3.select(svgEl.current);
+
+        svg.attr('width', w).attr('height', h);
+
+        const timesArray = props.data.map(value => value.dt*1000);
+        //const scaleX = d3.scaleLinear().domain([d3.min(timesArray), d3.max(timesArray)]).range([padding, w-padding]);
+        const scaleX = d3.scaleTime().domain([d3.min(timesArray), d3.max(timesArray)]).range([padding+12, w-padding]);
+        const axisX = d3.axisBottom(scaleX).ticks(timesArray.length).tickFormat(d3.timeFormat('%H:%M'));
+        svg.append('g').attr('transform', `translate(0, ${h-padding})`).attr('id', 'weatherinfo_hourly_graph_svg_axisx').call(axisX);
+
+        const tempsArray = props.data.map(value => Math.round(value.main.temp));
+        const scaleY = d3.scaleLinear().domain([d3.min(tempsArray)-1, d3.max(tempsArray)]).range([h-padding, padding]);
+        const axisY = d3.axisLeft(scaleY);
+        svg.append('g').attr('transform', `translate(${padding}, 0)`).attr('id', 'weatherinfo_hourly_graph_svg_axisy').call(axisY);
+
+        svg.append('text').attr('id', 'weatherinfo_hourly_graph_svg_label').attr('transform', `translate(${padding/4}, ${padding/2})`).html('&#730;C');
+
+        // temperature line: 
+        svg
+          .selectAll('.templine')
+          .data(props.data.slice(0, -1))
+          .enter()
+          .append('line')
+          .attr('class', 'templine')
+          .attr('x1', d => scaleX(d.dt*1000))
+          .attr('y1', d => scaleY(Math.round(d.main.temp)))
+          .attr('x2', (d, i) => scaleX(props.data[i+1].dt*1000))
+          .attr('y2', (d, i) => scaleY(Math.round(props.data[i+1].main.temp)));
+
+        // weather icons:
+        svg
+          .selectAll('image')
+          .data(props.data)
+          .enter()
+          .append('image')
+          .attr('x', d => scaleX(d.dt*1000)-16)
+          .attr('y', d => scaleY(Math.round(d.main.temp))-32)
+          .attr('width', 32)
+          .attr('height', 32)
+          .attr('xlink:href', d => (`http://openweathermap.org/img/wn/${d.weather[0].icon}@2x.png`));
+
+        // temperature points and mouseover tooltips:
+        svg
+          .selectAll('circle')
+          .data(props.data)
+          .enter()
+          .append('circle')
+          .attr('cx', d => scaleX(d.dt*1000))
+          .attr('cy', d => scaleY(Math.round(d.main.temp)))
+          .attr('r', 5)
+          .style('fill', d => (Math.round(d.main.temp) > 0 ? '#dd5555' : '#5566dd'))
+          .on('mouseover',
+            (d) => {
+
+              const scrollY = document.getElementById('weatherinfo_hourly_graph').scrollLeft;
+              const graphDimensions = document.getElementById('weatherinfo_hourly_graph').getBoundingClientRect();
+              const tempPosX = scaleX(d.dt*1000)-scrollY;
+              const translateX = (tempPosX < graphDimensions.width-120 ? tempPosX+8 : tempPosX-116);
+              const tempdate = new Date(d.dt*1000);
+              tooltip
+              .style('visibility', 'visible')
+              .style('transform', `translate(${translateX}px, ${scaleY(Math.round(d.main.temp))-48}px)`)
+              .html(`
+                ${weekdays[tempdate.getDay()]}, ${tempdate.getHours()}:00
+                <br>
+                ${Math.round(d.main.temp)}&#730;C <span class="feel">(${Math.round(d.main.feels_like)}&#730;C)</span>
+                <br>
+                <i class="fas fa-cloud"></i> ${d.clouds.all} %
+                <br>
+                <img class="wind_icon" src=${process.env.PUBLIC_URL + '/windicon.svg'} alt="wind icon" style="transform: rotate(${d.wind.deg+135}deg)"/> ${d.wind.speed} m/s
+              `);
+            }
+          );
+
+        svg.on('mouseout', () => tooltip.style('visibility', 'hidden'));
+
+      }
+    },
+    [props.data/*, svgEl.current*/])
+  
+  return(
+    <div>
+      <div id="weatherinfo_hourly_graph_tooltip" ref={tooltipEl} />
+      <svg id="weatherinfo_hourly_graph_svg" ref={svgEl} />
+    </div>
+  );
+}
+
+
 const WeatherInfo = (props) => {
 
   let [hourly, setHourly] = useState(false);
+  let [hourlyView, setHourlyView] = useState('list');
 
   useEffect(() => {
     if(props.weatherinfo) {
@@ -242,15 +350,20 @@ const WeatherInfo = (props) => {
     }
   }, [props.weatherinfo]);
 
+  useEffect(() => {
+    if(hourly) {
+      document.getElementById('weatherinfo_hourly').scrollIntoView(true);
+    }
+  }, [hourly])
+
   const handleHourlyClick = () => {
     if(props.weatherinfo) {
-      //setHourly(hourly ? false : true);
       const OWKEY = '968464eae7efcc5f8be6d30c8cd46921';
       const callurl = `https://api.openweathermap.org/data/2.5/forecast?units=metric&lat=${props.weatherinfo.coord.lat}&lon=${props.weatherinfo.coord.lon}&appid=${OWKEY}`;
       fetch(callurl)
         .then((response) => (response.json()))
         .then((data) => {
-          console.log(data);
+          //console.log(data);
           setHourly(data);
         })
         .catch(err => {
@@ -259,35 +372,56 @@ const WeatherInfo = (props) => {
     }
   };
 
+  const HourlyForecastData = () => {
+    const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    if(hourlyView === 'list') {
+      return(
+        <div id="weatherinfo_hourly_list">
+          {hourly.list.map((value, index, array) => {
+            let thedate = new Date(parseInt(value.dt)*1000);
+            let thelastdate = index > 0 ? new Date(parseInt(array[index-1].dt)*1000) : thedate;
+            return (
+              <div key={'forecast'+index} >
+                {index === 0 || thedate.getDay() !== thelastdate.getDay() ? 
+                  <div className="day" >{weekdays[thedate.getDay()] + ', ' + months[thedate.getMonth()] + ' ' + thedate.getDate()}</div>
+                : ''}
+                <div className="item" >
+                  <div className="time">{thedate.getHours() + ':00'}</div>
+                  <img className="icon" src={`http://openweathermap.org/img/wn/${value.weather[0].icon}@2x.png`} alt="weather icon" title={value.weather[0].description}/>
+                  <div className="temp" title="Temperature / feel">{Math.round(value.main.temp)} &#8451;<br/><span className="feel">{Math.round(value.main.feels_like)} &#8451;</span></div>
+                  <div className="desc">{value.weather[0].description}</div>
+                  <div className="clouds" title="Cloudiness"><i className="fas fa-cloud" /> {value.clouds.all} %
+                  </div>
+                  <div className="wind" title="Wind speed">
+                    <img className="wind_icon" src={process.env.PUBLIC_URL + '/windicon.svg'} alt="wind icon" style={{transform: `rotate(${value.wind.deg+135}deg)`}}/>
+                    {value.wind.speed} m/s
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      );
+    } else if(hourlyView === 'graph') {
+      return(
+        <div id="weatherinfo_hourly_graph">
+          <HourlyForecastGraph data={hourly.list} />
+        </div>
+      );
+    } else {
+      return('');
+    }
+  }
+
   const HourlyForecast = () => {
     if(hourly) {
       return(
         <div id="weatherinfo_hourly">
-          {hourly.list.map((value, index, array) => {
-            let thedate = new Date(parseInt(value.dt)*1000);
-            let thelastdate = index > 0 ? new Date(parseInt(array[index-1].dt)*1000) : thedate;
-            const weekdays = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-            const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-            return (
-            <div key={'forecast'+index} >
-              {index === 0 || thedate.getDay() !== thelastdate.getDay() ? 
-                <div className="day" >{weekdays[thedate.getDay()] + ', ' + months[thedate.getMonth()] + ' ' + thedate.getDate()}</div>
-               : ''}
-              <div className="item" >
-                <div className="time">{thedate.getHours() + ':00'}</div>
-                <img className="icon" src={`http://openweathermap.org/img/wn/${value.weather[0].icon}@2x.png`} alt="weather icon"/>
-                <div className="temp">{Math.round(value.main.temp)} &#8451;<br/><span className="feel">{Math.round(value.main.feels_like)} &#8451;</span></div>
-                <div className="desc">{value.weather[0].description}</div>
-                <div className="clouds"><i className="fas fa-cloud" /> {value.clouds.all} %
-                </div>
-                <div className="wind">
-                  <img className="wind_icon" src={process.env.PUBLIC_URL + '/windicon.svg'} alt="wind icon" style={{transform: `rotate(${value.wind.deg+135}deg)`}}/>
-                  {value.wind.speed} m/s
-                </div>
-              </div>
-            </div>
-            );
-          })}
+          <div id="weatherinfo_hourly_view">
+            <div id="weatherinfo_hourly_view_list" className={hourlyView === 'list' ? 'selected' : ''} onClick={() => setHourlyView('list')} ><i className="fas fa-bars"></i></div>
+            <div id="weatherinfo_hourly_view_graph" className={hourlyView === 'graph' ? 'selected' : ''} onClick={() => setHourlyView('graph')} ><i className="fas fa-chart-bar"></i></div>
+          </div>
+          <HourlyForecastData />
         </div>
       );
     } else {
